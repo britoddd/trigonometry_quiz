@@ -1,20 +1,28 @@
-// Merender tabel sudut istimewa
+// Merender tabel sudut istimewa (transposed: fungsi sebagai baris, sudut sebagai kolom)
 
 function showTabel() {
   showScreen('screen-tabel');
 
+  const isTD  = v => v === 'Tidak Terdefinisi';
+  const cls   = v => isTD(v) ? 'val-undef' : v.startsWith('-') ? 'val-neg' : v === '0' ? 'val-zero' : 'val-pos';
+  const disp  = v => isTD(v) ? '∞' : v;
+
+  // Header row: empty corner + semua sudut
+  const thead = document.getElementById('tabel-head');
+  thead.innerHTML = `
+    <tr>
+      <th class="tabel-func-header"></th>
+      ${ALL_ANGLES.map(a => `<th>${a}°</th>`).join('')}
+    </tr>`;
+
+  // Satu baris per fungsi
   const tbody = document.getElementById('tabel-body');
-  tbody.innerHTML = ALL_ANGLES.map(angle => {
-    const sin = TRIG[angle].sin.d;
-    const cos = TRIG[angle].cos.d;
-    const tan = TRIG[angle].tan.d;
-    const isTD = v => v === 'Tidak Terdefinisi';
-    return `
-      <tr>
-        <td class="tabel-angle">${angle}°</td>
-        <td class="${sin.startsWith('-') ? 'val-neg' : sin === '0' ? 'val-zero' : 'val-pos'}">${sin}</td>
-        <td class="${cos.startsWith('-') ? 'val-neg' : cos === '0' ? 'val-zero' : 'val-pos'}">${cos}</td>
-        <td class="${isTD(tan) ? 'val-undef' : tan.startsWith('-') ? 'val-neg' : tan === '0' ? 'val-zero' : 'val-pos'}">${isTD(tan) ? '∞' : tan}</td>
-      </tr>`;
-  }).join('');
+  tbody.innerHTML = ['sin', 'cos', 'tan'].map(func => `
+    <tr>
+      <td class="tabel-func-label">${func}</td>
+      ${ALL_ANGLES.map(a => {
+        const v = TRIG[a][func].d;
+        return `<td class="${cls(v)}">${disp(v)}</td>`;
+      }).join('')}
+    </tr>`).join('');
 }
