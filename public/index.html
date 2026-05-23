@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trigonometri Sudut Istimewa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Screen: Selamat Datang -->
+  <div id="screen-welcome" class="screen">
+    <div class="card card-welcome">
+      <div class="app-icon">∿</div>
+      <h1 class="app-title">Trigonometri<br>Sudut Istimewa</h1>
+      <p class="app-subtitle">Latihan sin, cos, tan untuk sudut 0° – 360°</p>
+      <div class="form-group">
+        <label for="input-username">Nama Kamu</label>
+        <input type="text" id="input-username" placeholder="Masukkan nama..." maxlength="30" autocomplete="off">
+        <span id="username-error" class="error-msg"></span>
+      </div>
+      <button id="btn-start-welcome" class="btn btn-primary btn-full">Mulai Latihan</button>
+    </div>
+  </div>
+
+  <!-- Screen: Menu -->
+  <div id="screen-menu" class="screen">
+    <div class="card card-menu">
+      <div class="app-icon">∿</div>
+      <h2 class="menu-greeting">Selamat datang, <span id="menu-username" class="highlight"></span>!</h2>
+      <p class="menu-hint">Pilih tindakan di bawah ini</p>
+      <div class="menu-actions">
+        <button id="btn-start-session" class="btn btn-primary btn-full btn-large">
+          <span class="btn-icon">▶</span> Mulai Sesi Baru
+        </button>
+        <button id="btn-leaderboard-menu" class="btn btn-outline btn-full btn-large">
+          <span class="btn-icon">🏆</span> Papan Peringkat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen: Soal -->
+  <div id="screen-question" class="screen screen-question">
+    <div class="question-wrapper">
+      <div class="question-header">
+        <span id="question-progress" class="progress-text">Soal 1 dari 10</span>
+        <span id="question-difficulty" class="difficulty-badge">Mudah</span>
+      </div>
+
+      <div class="timer-row">
+        <div class="timer-track">
+          <div id="timer-bar" class="timer-bar"></div>
+        </div>
+        <span id="timer-text" class="timer-text">7s</span>
+      </div>
+
+      <div class="question-card">
+        <p class="question-label">Berapa nilai dari...</p>
+        <div id="question-text" class="question-text"></div>
+        <div id="question-choices" class="choices-grid"></div>
+      </div>
+
+      <div id="feedback-panel" class="feedback-panel hidden"></div>
+    </div>
+  </div>
+
+  <!-- Screen: Ringkasan -->
+  <div id="screen-summary" class="screen">
+    <div class="summary-wrapper">
+      <h2 class="section-title">Hasil Sesi</h2>
+
+      <div class="score-card">
+        <div class="score-emoji" id="score-emoji">🌟</div>
+        <div class="score-name" id="summary-name"></div>
+        <div class="score-big" id="summary-score"></div>
+        <div class="score-percent" id="summary-percent"></div>
+        <div class="score-stats">
+          <span class="stat-correct" id="summary-correct"></span>
+          <span class="stat-divider">·</span>
+          <span class="stat-wrong" id="summary-wrong"></span>
+        </div>
+      </div>
+
+      <div class="details-title">Rincian Jawaban</div>
+      <div id="summary-details" class="summary-details"></div>
+
+      <div class="summary-actions">
+        <button id="btn-play-again" class="btn btn-primary">▶ Main Lagi</button>
+        <button id="btn-leaderboard-from-summary" class="btn btn-outline">🏆 Papan Peringkat</button>
+        <button id="btn-menu-from-summary" class="btn btn-ghost">← Menu Utama</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen: Papan Peringkat -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="leaderboard-wrapper">
+      <h2 class="section-title">🏆 Papan Peringkat</h2>
+      <div class="table-container">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama</th>
+              <th>✓ Benar</th>
+              <th>✗ Salah</th>
+              <th>Rata-rata</th>
+              <th>Sesi</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr><td colspan="6" class="table-empty">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button id="btn-back-from-leaderboard" class="btn btn-ghost">← Kembali</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

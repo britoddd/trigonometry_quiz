@@ -1,0 +1,12 @@
+{
+  "name": "trigonometri-sudut-istimewa",
+  "version": "1.0.0",
+  "description": "Aplikasi kuis trigonometri sudut istimewa 0–360 derajat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

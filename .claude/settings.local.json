@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:3000/api/leaderboard)",
+      "Bash(PORT=3001 node server.js)",
+      "Bash(curl -s http://localhost:3001/api/leaderboard)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/)",
+      "Bash(git add *)"
+    ]
+  }
+}
