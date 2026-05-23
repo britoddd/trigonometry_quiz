@@ -38,6 +38,9 @@
         <button id="btn-leaderboard-menu" class="btn btn-outline btn-full btn-large">
           <span class="btn-icon">🏆</span> Papan Peringkat
         </button>
+        <button id="btn-tabel-menu" class="btn btn-outline btn-full btn-large">
+          <span class="btn-icon">📋</span> Tabel Sudut Istimewa
+        </button>
       </div>
     </div>
   </div>
@@ -120,6 +123,61 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Screen: Tabel Sudut Istimewa -->
+  <div id="screen-tabel" class="screen">
+    <div class="tabel-wrapper">
+      <h2 class="section-title">📋 Tabel Sudut Istimewa</h2>
+      <p class="tabel-hint">Nilai sin, cos, dan tan untuk seluruh sudut istimewa 0° – 360°</p>
+
+      <div class="tabel-legend">
+        <span class="legend-item val-pos">Positif</span>
+        <span class="legend-item val-neg">Negatif</span>
+        <span class="legend-item val-zero">Nol</span>
+        <span class="legend-item val-undef">Tak Terdefinisi (∞)</span>
+      </div>
+
+      <div class="table-container">
+        <table class="tabel-table">
+          <thead>
+            <tr>
+              <th>Sudut</th>
+              <th>sin</th>
+              <th>cos</th>
+              <th>tan</th>
+            </tr>
+          </thead>
+          <tbody id="tabel-body"></tbody>
+        </table>
+      </div>
+
+      <div class="tabel-quadrant-info">
+        <div class="quadrant-card">
+          <div class="quadrant-title">Kuadran I (0° – 90°)</div>
+          <div class="quadrant-desc">sin +, cos +, tan +</div>
+        </div>
+        <div class="quadrant-card">
+          <div class="quadrant-title">Kuadran II (90° – 180°)</div>
+          <div class="quadrant-desc">sin +, cos −, tan −</div>
+        </div>
+        <div class="quadrant-card">
+          <div class="quadrant-title">Kuadran III (180° – 270°)</div>
+          <div class="quadrant-desc">sin −, cos −, tan +</div>
+        </div>
+        <div class="quadrant-card">
+          <div class="quadrant-title">Kuadran IV (270° – 360°)</div>
+          <div class="quadrant-desc">sin −, cos +, tan −</div>
+        </div>
+      </div>
+
+      <button id="btn-back-from-tabel" class="btn btn-ghost">← Kembali</button>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/leaderboard.js"></script>
+  <script src="js/tabel.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

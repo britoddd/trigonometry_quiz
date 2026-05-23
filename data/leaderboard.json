@@ -1,1 +1,8 @@
-{}
+{
+  "Brian": {
+    "username": "Brian",
+    "totalCorrect": 20,
+    "totalWrong": 0,
+    "sessions": 2
+  }
+}

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Trigonometri Sudut Istimewa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- Login -->
+  <div id="login-wrap" class="login-wrap">
+    <div class="login-card">
+      <div class="login-icon">🔐</div>
+      <h1 class="login-title">Panel Admin</h1>
+      <p class="login-sub">Masukkan kata sandi untuk melanjutkan</p>
+      <div class="form-group">
+        <label for="input-password">Kata Sandi</label>
+        <input type="password" id="input-password" placeholder="Masukkan kata sandi..." autocomplete="off">
+        <span id="password-error" class="error-msg"></span>
+      </div>
+      <button id="btn-login" class="btn btn-primary btn-full">Masuk</button>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel">
+    <div class="admin-header">
+      <div class="admin-title">Panel <span>Admin</span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="/" class="btn btn-ghost btn-sm">← Ke Aplikasi</a>
+        <button id="btn-logout" class="btn btn-ghost btn-sm">Keluar</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-users">—</div>
+        <div class="stat-lbl">Total Pengguna</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-sessions">—</div>
+        <div class="stat-lbl">Total Sesi</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-avg">—</div>
+        <div class="stat-lbl">Rata-rata Global</div>
+      </div>
+    </div>
+
+    <!-- Tabel Pengguna -->
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Daftar Pengguna</h3>
+        <button id="btn-refresh" class="btn btn-ghost btn-sm">↻ Muat Ulang</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nama</th>
+            <th>Benar</th>
+            <th>Salah</th>
+            <th>Rata-rata</th>
+            <th>Sesi</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="users-body">
+          <tr><td colspan="7" class="table-empty">Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-zone">
+      <h3>⚠️ Zona Bahaya</h3>
+      <p>Tindakan di bawah ini tidak dapat dibatalkan. Pastikan kamu tahu apa yang kamu lakukan.</p>
+      <button id="btn-clear-all" class="btn btn-danger">🗑 Hapus Semua Data Pengguna</button>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Konfirmasi</h3>
+      <p id="modal-body">Apakah kamu yakin?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-ghost">Batal</button>
+        <button id="modal-confirm" class="btn btn-danger">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const ADMIN_PASSWORD = 'admin';
+    const ADMIN_HEADER   = { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_PASSWORD };
+
+    // ─── Auth ─────────────────────────────────────────────────────────────────
+
+    function isLoggedIn() {
+      return sessionStorage.getItem('admin_auth') === '1';
+    }
+
+    function showPanel() {
+      document.getElementById('login-wrap').style.display = 'none';
+      document.getElementById('admin-panel').classList.add('visible');
+      loadUsers();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (isLoggedIn()) showPanel();
+
+      document.getElementById('input-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('btn-login').click();
+      });
+
+      document.getElementById('btn-login').addEventListener('click', () => {
+        const val = document.getElementById('input-password').value;
+        const err = document.getElementById('password-error');
+        if (val !== ADMIN_PASSWORD) {
+          err.textContent = 'Kata sandi salah.';
+          document.getElementById('input-password').value = '';
+          return;
+        }
+        err.textContent = '';
+        sessionStorage.setItem('admin_auth', '1');
+        showPanel();
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', () => {
+        sessionStorage.removeItem('admin_auth');
+        location.reload();
+      });
+
+      document.getElementById('btn-refresh').addEventListener('click', loadUsers);
+
+      document.getElementById('btn-clear-all').addEventListener('click', () => {
+        openModal(
+          'Hapus Semua Data?',
+          'Seluruh data pengguna dan skor akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+          async () => {
+            try {
+              const res = await fetch('/admin/api/users', { method: 'DELETE', headers: ADMIN_HEADER });
+              if (!res.ok) throw new Error();
+              toast('Semua data berhasil dihapus.', 'success');
+              loadUsers();
+            } catch {
+              toast('Gagal menghapus data.', 'error');
+            }
+          }
+        );
+      });
+
+      document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    });
+
+    // ─── Load users ───────────────────────────────────────────────────────────
+
+    async function loadUsers() {
+      const tbody = document.getElementById('users-body');
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Memuat...</td></tr>';
+
+      try {
+        const res  = await fetch('/admin/api/users', { headers: ADMIN_HEADER });
+        if (res.status === 403) { toast('Akses ditolak.', 'error'); return; }
+        const data = await res.json();
+
+        // Stats
+        const totalSessions = data.reduce((s, u) => s + u.sessions, 0);
+        const totalCorrect  = data.reduce((s, u) => s + u.totalCorrect, 0);
+        const totalAnswers  = data.reduce((s, u) => s + u.totalCorrect + u.totalWrong, 0);
+        const globalAvg     = totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : 0;
+
+        document.getElementById('stat-users').textContent    = data.length;
+        document.getElementById('stat-sessions').textContent = totalSessions;
+        document.getElementById('stat-avg').textContent      = globalAvg + '%';
+
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Belum ada pengguna terdaftar.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map((u, i) => {
+          const total = u.totalCorrect + u.totalWrong;
+          const avg   = total > 0 ? Math.round((u.totalCorrect / total) * 100) : 0;
+          return `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${u.username}</strong></td>
+              <td class="correct-cell">${u.totalCorrect}</td>
+              <td class="wrong-cell">${u.totalWrong}</td>
+              <td>${avg}%</td>
+              <td>${u.sessions}</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-warn btn-sm" onclick="resetUser('${u.username}')">Reset</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Hapus</button>
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Gagal memuat data.</td></tr>';
+      }
+    }
+
+    // ─── Actions ─────────────────────────────────────────────────────────────
+
+    function resetUser(username) {
+      openModal(
+        `Reset "${username}"?`,
+        'Semua skor dan statistik pengguna ini akan direset ke nol. Akun tetap ada.',
+        async () => {
+          try {
+            const res = await fetch(`/admin/api/users/${encodeURIComponent(username)}/reset`, {
+              method: 'PUT',
+              headers: ADMIN_HEADER,
+            });
+            if (!res.ok) throw new Error();
+            toast(`Skor ${username} berhasil direset.`, 'success');
+            loadUsers();
+          } catch {
+            toast('Gagal mereset skor.', 'error');
+          }
+        }
+      );
+    }
+
+    function deleteUser(username) {
+      openModal(
+        `Hapus "${username}"?`,
+        'Data pengguna ini akan dihapus permanen dari papan peringkat.',
+        async () => {
+          try {
+            const res = await fetch(`/admin/api/users/${encodeURIComponent(username)}`, {
+              method: 'DELETE',
+              headers: ADMIN_HEADER,
+            });
+            if (!res.ok) throw new Error();
+            toast(`${username} berhasil dihapus.`, 'success');
+            loadUsers();
+          } catch {
+            toast('Gagal menghapus pengguna.', 'error');
+          }
+        }
+      );
+    }
+
+    // ─── Modal ────────────────────────────────────────────────────────────────
+
+    let _confirmCallback = null;
+
+    function openModal(title, body, onConfirm) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').textContent  = body;
+      _confirmCallback = onConfirm;
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+      _confirmCallback = null;
+    }
+
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+      closeModal();
+      if (_confirmCallback) _confirmCallback();
+    });
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // ─── Toast ────────────────────────────────────────────────────────────────
+
+    let _toastTimer = null;
+    function toast(msg, type = '') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `toast show ${type}`;
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

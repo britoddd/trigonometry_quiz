@@ -576,10 +576,118 @@ body {
   padding: 24px;
 }
 
+/* ─── TABEL SUDUT ISTIMEWA ─── */
+.tabel-wrapper {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tabel-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: -8px;
+}
+
+.tabel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.legend-item {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.tabel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabel-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 14px;
+  text-align: center;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tabel-table th:first-child { text-align: left; }
+
+.tabel-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tabel-table tr:last-child td { border-bottom: none; }
+.tabel-table tr:hover td { background: var(--bg); }
+
+.tabel-angle {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: left !important;
+  font-size: 13px;
+}
+
+/* Separators between quadrants */
+.tabel-table tr:nth-child(5) td,
+.tabel-table tr:nth-child(8) td,
+.tabel-table tr:nth-child(12) td,
+.tabel-table tr:nth-child(16) td {
+  border-bottom: 2px solid var(--primary);
+}
+
+.val-pos   { color: #065F46; background: #F0FDF4; border-radius: 6px; }
+.val-neg   { color: #991B1B; background: #FFF1F2; border-radius: 6px; }
+.val-zero  { color: var(--text-muted); }
+.val-undef { color: #92400E; background: var(--warning-light); border-radius: 6px; font-style: italic; }
+
+.tabel-quadrant-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quadrant-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--primary);
+}
+
+.quadrant-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.quadrant-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 400px) {
   .card { padding: 28px 20px; }
   .question-text { font-size: 26px; }
   .choice-btn { font-size: 16px; padding: 14px 8px; }
   .choices-grid { gap: 8px; }
+  .tabel-quadrant-info { grid-template-columns: 1fr; }
 }
