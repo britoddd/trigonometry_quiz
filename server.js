@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3123;
 const DATA_DIR      = path.join(__dirname, 'data');
 const DATA_FILE     = path.join(DATA_DIR, 'leaderboard.json');
 const DATA_FILE2    = path.join(DATA_DIR, 'leaderboard2.json');
