@@ -32,9 +32,18 @@
       <h2 class="menu-greeting">Selamat datang, <span id="menu-username" class="highlight"></span>!</h2>
       <p class="menu-hint">Pilih tindakan di bawah ini</p>
       <div class="menu-actions">
+        <div class="menu-section-label">Santai</div>
         <button id="btn-start-session" class="btn btn-primary btn-full btn-large">
-          <span class="btn-icon">▶</span> Mulai Sesi Baru
+          <span class="btn-icon">▶</span> Cari Nilai Trigonometri
         </button>
+        <button id="btn-start-reverse" class="btn btn-primary btn-full btn-large btn-reverse">
+          <span class="btn-icon">↔</span> Cari Sudut Trigonometri
+        </button>
+        <div class="menu-section-label">Kompetitif</div>
+        <button id="btn-start-competitive" class="btn btn-competitive btn-full btn-large">
+          <span class="btn-icon">⚡</span> Mode Kompetitif
+        </button>
+        <div class="menu-divider"></div>
         <button id="btn-leaderboard-menu" class="btn btn-outline btn-full btn-large">
           <span class="btn-icon">🏆</span> Papan Peringkat
         </button>
@@ -53,11 +62,11 @@
         <span id="question-difficulty" class="difficulty-badge">Mudah</span>
       </div>
 
-      <div class="timer-row">
+      <div id="question-timer-row" class="timer-row">
         <div class="timer-track">
           <div id="timer-bar" class="timer-bar"></div>
         </div>
-        <span id="timer-text" class="timer-text">7s</span>
+        <span id="timer-text" class="timer-text">12s</span>
       </div>
 
       <div class="question-card">
@@ -67,6 +76,32 @@
       </div>
 
       <div id="feedback-panel" class="feedback-panel hidden"></div>
+    </div>
+  </div>
+
+  <!-- Screen: Soal Terbalik -->
+  <div id="screen-question-reverse" class="screen screen-question">
+    <div class="question-wrapper">
+      <div class="question-header">
+        <span id="rq-progress" class="progress-text">Soal 1 dari 10</span>
+        <span class="difficulty-badge difficulty-reverse">Cari Sudut</span>
+      </div>
+
+      <div id="rq-timer-row" class="timer-row">
+        <div class="timer-track">
+          <div id="rq-timer-bar" class="timer-bar"></div>
+        </div>
+        <span id="rq-timer-text" class="timer-text">35s</span>
+      </div>
+
+      <div class="question-card">
+        <p class="question-label">Pilih semua sudut yang memenuhi...</p>
+        <div id="rq-text" class="question-text rq-text"></div>
+        <div id="rq-choices" class="angle-grid"></div>
+        <button id="rq-confirm" class="btn btn-primary btn-full rq-confirm-btn">Konfirmasi Jawaban</button>
+      </div>
+
+      <div id="rq-feedback" class="feedback-panel hidden"></div>
     </div>
   </div>
 
@@ -98,22 +133,66 @@
     </div>
   </div>
 
+  <!-- Screen: Ringkasan Terbalik -->
+  <div id="screen-summary-reverse" class="screen">
+    <div class="summary-wrapper">
+      <h2 class="section-title">Hasil Latihan Terbalik</h2>
+
+      <div class="score-card">
+        <div class="score-emoji" id="rs-emoji">🌟</div>
+        <div class="score-name" id="rs-name"></div>
+        <div class="score-big" id="rs-score"></div>
+        <div class="score-percent" id="rs-percent"></div>
+        <div class="score-stats" id="rs-stats"></div>
+      </div>
+
+      <div class="details-title">Rincian Jawaban</div>
+      <div id="rs-details" class="summary-details"></div>
+
+      <div class="summary-actions">
+        <button id="btn-play-again-reverse" class="btn btn-primary">▶ Main Lagi</button>
+        <button id="btn-leaderboard-from-reverse" class="btn btn-outline">🏆 Papan Peringkat</button>
+        <button id="btn-menu-from-reverse" class="btn btn-ghost">← Menu Utama</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen: Ringkasan Kompetitif -->
+  <div id="screen-summary-competitive" class="screen">
+    <div class="summary-wrapper">
+      <h2 class="section-title">⚡ Hasil Mode Kompetitif</h2>
+
+      <div class="score-card">
+        <div class="score-emoji" id="cs-emoji">🌟</div>
+        <div class="score-name" id="cs-name"></div>
+        <div class="score-big" id="cs-score"></div>
+        <div class="score-percent" id="cs-percent"></div>
+        <div class="score-stats" id="cs-breakdown"></div>
+      </div>
+
+      <div class="details-title">Rincian Jawaban</div>
+      <div id="cs-details" class="summary-details"></div>
+
+      <div class="summary-actions">
+        <button id="btn-play-again-comp" class="btn btn-competitive btn-full">⚡ Main Lagi</button>
+        <button id="btn-leaderboard-from-comp" class="btn btn-outline btn-full">🏆 Papan Peringkat</button>
+        <button id="btn-menu-from-comp" class="btn btn-ghost">← Menu Utama</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Screen: Papan Peringkat -->
   <div id="screen-leaderboard" class="screen">
     <div class="leaderboard-wrapper">
       <h2 class="section-title">🏆 Papan Peringkat</h2>
+      <div class="leaderboard-tabs">
+        <button id="lb-tab-1" class="lb-tab active" onclick="loadLeaderboard(1)">Latihan 1</button>
+        <button id="lb-tab-2" class="lb-tab" onclick="loadLeaderboard(2)">Terbalik</button>
+        <button id="lb-tab-3" class="lb-tab" onclick="loadLeaderboard(3)">⚡ Tercepat</button>
+      </div>
       <div class="table-container">
         <table class="leaderboard-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Nama</th>
-              <th>✓ Benar</th>
-              <th>✗ Salah</th>
-              <th>Rata-rata</th>
-              <th>Sesi</th>
-            </tr>
-          </thead>
+          <thead id="leaderboard-head"></thead>
           <tbody id="leaderboard-body">
             <tr><td colspan="6" class="table-empty">Memuat...</td></tr>
           </tbody>
@@ -169,6 +248,8 @@
   <script src="js/data.js"></script>
   <script src="js/state.js"></script>
   <script src="js/quiz.js"></script>
+  <script src="js/quiz2.js"></script>
+  <script src="js/competitive.js"></script>
   <script src="js/leaderboard.js"></script>
   <script src="js/tabel.js"></script>
   <script src="js/app.js"></script>

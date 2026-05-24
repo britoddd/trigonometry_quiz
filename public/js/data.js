@@ -89,9 +89,9 @@ const TRIG = {
 };
 
 const DIFFICULTY = {
-  easy:   { angles: [0, 90, 180, 270, 360], time: 7 },
-  medium: { angles: [30, 45, 60],            time: 11 },
-  hard:   { angles: [120, 135, 150, 210, 225, 240, 300, 315, 330], time: 15 },
+  easy:   { angles: [0, 90, 180, 270, 360], time: 12 },
+  medium: { angles: [30, 45, 60],            time: 20 },
+  hard:   { angles: [120, 135, 150, 210, 225, 240, 300, 315, 330], time: 30 },
 };
 
 const ANSWER_POOL = [

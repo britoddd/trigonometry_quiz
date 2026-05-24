@@ -1,12 +1,15 @@
 // State aplikasi dan helper global
 
-let currentUser = null;
-let questions   = [];
-let currentIndex = 0;
-let results      = [];
-let timerInterval = null;
-let timeLeft  = 0;
-let answered  = false;
+let currentUser      = null;
+let userTotalCorrect = 0;
+let sessionMode      = 'casual'; // 'casual' | 'competitive'
+let sessionStartTime = 0;
+let questions        = [];
+let currentIndex     = 0;
+let results          = [];
+let timerInterval    = null;
+let timeLeft         = 0;
+let answered         = false;
 
 // ─── Cookie ──────────────────────────────────────────────────────────────────
 

@@ -266,6 +266,20 @@ body {
 .modal-actions { display: flex; gap: 10px; }
 .modal-actions .btn { flex: 1; }
 
+.filter-input {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 160px;
+}
+.filter-input:focus { border-color: var(--primary); }
+
 @media (max-width: 500px) {
   .admin-stats { grid-template-columns: 1fr 1fr; }
+  .filter-input { width: 120px; }
 }

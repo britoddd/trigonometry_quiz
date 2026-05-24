@@ -1,4 +1,4 @@
-// Logika kuis: generate soal, sesi, timer, jawaban, feedback, ringkasan
+// Logika kuis Cari Nilai (casual & competitive)
 
 function shuffle(arr) {
   const a = [...arr];
@@ -15,29 +15,45 @@ function pickRandom(arr, n) {
 
 // ─── Generate ────────────────────────────────────────────────────────────────
 
-function generateQuestions() {
-  const funcs = ['sin', 'cos', 'tan'];
-  const selected = [
-    ...pickRandom(DIFFICULTY.easy.angles,   3).map(a => ({ angle: a, diff: 'easy',   time: 7  })),
-    ...pickRandom(DIFFICULTY.medium.angles, 3).map(a => ({ angle: a, diff: 'medium', time: 11 })),
-    ...pickRandom(DIFFICULTY.hard.angles,   4).map(a => ({ angle: a, diff: 'hard',   time: 15 })),
-  ];
+function adjustedTime(baseTime, minTime) {
+  if (userTotalCorrect <= 20) return baseTime;
+  const reduction = Math.floor((userTotalCorrect - 20) / 10);
+  return Math.max(baseTime - reduction, minTime);
+}
 
+function buildNilaiQuestions(counts) {
+  // counts: { easy, medium, hard }
+  const funcs = ['sin', 'cos', 'tan'];
+  const times  = {
+    easy:   adjustedTime(DIFFICULTY.easy.time,   5),
+    medium: adjustedTime(DIFFICULTY.medium.time, 8),
+    hard:   adjustedTime(DIFFICULTY.hard.time,   10),
+  };
+  const selected = [
+    ...pickRandom(DIFFICULTY.easy.angles,   counts.easy).map(a  => ({ angle: a, diff: 'easy',   time: times.easy   })),
+    ...pickRandom(DIFFICULTY.medium.angles, counts.medium).map(a => ({ angle: a, diff: 'medium', time: times.medium })),
+    ...pickRandom(DIFFICULTY.hard.angles,   counts.hard).map(a   => ({ angle: a, diff: 'hard',   time: times.hard   })),
+  ];
   return shuffle(selected).map(({ angle, diff, time }) => {
     const func = funcs[Math.floor(Math.random() * 3)];
     const { d: correct, m: method } = TRIG[angle][func];
     const wrongPool = ANSWER_POOL.filter(v => v !== correct);
-    const choices = shuffle([correct, ...pickRandom(wrongPool, 3)]);
+    const choices   = shuffle([correct, ...pickRandom(wrongPool, 3)]);
     return { angle, func, correct, method, choices, diff, time };
   });
+}
+
+function generateQuestions() {
+  return buildNilaiQuestions({ easy: 3, medium: 3, hard: 4 }); // 10 total
 }
 
 // ─── Session ─────────────────────────────────────────────────────────────────
 
 function startSession() {
-  questions = generateQuestions();
+  sessionMode  = 'casual';
+  questions    = generateQuestions();
   currentIndex = 0;
-  results = [];
+  results      = [];
   showQuestion(0);
 }
 
@@ -45,13 +61,15 @@ function showQuestion(idx) {
   showScreen('screen-question');
   answered = false;
 
-  const q = questions[idx];
+  const q        = questions[idx];
+  const total    = sessionMode === 'competitive' ? 15 : 10;
+  const qNum     = sessionMode === 'competitive' ? idx + 1 : idx + 1;
   const diffLabel = { easy: 'Mudah', medium: 'Sedang', hard: 'Sulit' }[q.diff];
 
-  document.getElementById('question-progress').textContent = `Soal ${idx + 1} dari 10`;
+  document.getElementById('question-progress').textContent = `Soal ${qNum} dari ${total}`;
   const badge = document.getElementById('question-difficulty');
   badge.textContent = diffLabel;
-  badge.className = `difficulty-badge difficulty-${q.diff}`;
+  badge.className   = `difficulty-badge difficulty-${q.diff}`;
   document.getElementById('question-text').textContent = `${q.func}(${q.angle}°) = ?`;
   document.getElementById('feedback-panel').classList.add('hidden');
 
@@ -65,7 +83,14 @@ function showQuestion(idx) {
     grid.appendChild(btn);
   });
 
-  startTimer(q.time);
+  const timerRow = document.getElementById('question-timer-row');
+  if (sessionMode === 'competitive') {
+    timerRow.classList.remove('hidden');
+    startTimer(q.time);
+  } else {
+    timerRow.classList.add('hidden');
+    clearInterval(timerInterval);
+  }
 }
 
 // ─── Timer ────────────────────────────────────────────────────────────────────
@@ -109,9 +134,9 @@ function stopTimer() {
 function handleAnswer(idx, val) {
   if (answered) return;
   answered = true;
-  stopTimer();
+  if (sessionMode === 'competitive') stopTimer();
 
-  const q = questions[currentIndex];
+  const q         = questions[currentIndex];
   const isCorrect = val === q.correct;
 
   const buttons = document.querySelectorAll('.choice-btn');
@@ -142,7 +167,8 @@ function renderFeedback(isCorrect, isTimeout, correctAnswer, method) {
   const panel = document.getElementById('feedback-panel');
   panel.classList.remove('hidden', 'feedback-correct', 'feedback-wrong', 'feedback-timeout');
 
-  const nextLabel = currentIndex === questions.length - 1 ? 'Lihat Hasil' : 'Lanjut →';
+  const isLast   = currentIndex === questions.length - 1;
+  const nextLabel = (isLast && sessionMode === 'casual') ? 'Lihat Hasil' : 'Lanjut →';
 
   if (isCorrect) {
     panel.classList.add('feedback-correct');
@@ -151,7 +177,7 @@ function renderFeedback(isCorrect, isTimeout, correctAnswer, method) {
       <button class="btn-next" onclick="nextQuestion()">${nextLabel}</button>
     `;
   } else {
-    const headerText = isTimeout ? '⏱ Waktu Habis!' : '✗ Salah!';
+    const headerText  = isTimeout ? '⏱ Waktu Habis!' : '✗ Salah!';
     const headerClass = isTimeout ? 'timeout' : 'wrong';
     panel.classList.add(isTimeout ? 'feedback-timeout' : 'feedback-wrong');
     panel.innerHTML = `
@@ -166,42 +192,36 @@ function renderFeedback(isCorrect, isTimeout, correctAnswer, method) {
 function nextQuestion() {
   currentIndex++;
   if (currentIndex >= questions.length) {
-    finishSession();
+    if (sessionMode === 'competitive') {
+      compTransitionToSudut();
+    } else {
+      finishSession();
+    }
   } else {
     showQuestion(currentIndex);
   }
 }
 
-// ─── Summary ─────────────────────────────────────────────────────────────────
+// ─── Summary (casual only) ────────────────────────────────────────────────────
 
-async function finishSession() {
+function finishSession() {
   const correct = results.filter(r => r.isCorrect).length;
   const wrong   = results.length - correct;
   const pct     = Math.round((correct / results.length) * 100);
 
-  try {
-    await fetch('/api/score', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: currentUser, correct, wrong }),
-    });
-  } catch (e) {
-    console.error('Gagal menyimpan skor:', e);
-  }
-
   showScreen('screen-summary');
 
   const emojis = ['📚', '📚', '💪', '💪', '😊', '😊', '👍', '👍', '🌟', '🌟', '🌟'];
-  document.getElementById('score-emoji').textContent = emojis[correct] || '📚';
-  document.getElementById('summary-name').textContent    = currentUser;
-  document.getElementById('summary-score').textContent   = `${correct} / 10`;
-  document.getElementById('summary-percent').textContent = `${pct}%`;
-  document.getElementById('summary-correct').textContent = `✓ ${correct} benar`;
-  document.getElementById('summary-wrong').textContent   = `✗ ${wrong} salah`;
+  document.getElementById('score-emoji').textContent      = emojis[correct] || '📚';
+  document.getElementById('summary-name').textContent     = currentUser;
+  document.getElementById('summary-score').textContent    = `${correct} / ${results.length}`;
+  document.getElementById('summary-percent').textContent  = `${pct}%`;
+  document.getElementById('summary-correct').textContent  = `✓ ${correct} benar`;
+  document.getElementById('summary-wrong').textContent    = `✗ ${wrong} salah`;
 
   document.getElementById('summary-details').innerHTML = results.map((r, i) => {
-    const cls       = r.isCorrect ? 'result-correct' : 'result-wrong';
-    const ansHtml   = r.isCorrect
+    const cls      = r.isCorrect ? 'result-correct' : 'result-wrong';
+    const ansHtml  = r.isCorrect
       ? `<span class="result-answer">✓ ${r.correct}</span>`
       : `<span class="result-answer">✗ ${r.userAnswer}</span>`;
     const methodHtml = !r.isCorrect
@@ -213,8 +233,7 @@ async function finishSession() {
           <span class="result-num">${i + 1}.</span>
           <span class="result-question">${r.label} = ?</span>
           ${ansHtml}
-        </div>
-        ${methodHtml}
+        </div>${methodHtml}
       </div>`;
   }).join('');
 }

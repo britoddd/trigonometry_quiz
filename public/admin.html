@@ -51,35 +51,69 @@
       </div>
     </div>
 
-    <!-- Tabel Pengguna -->
+    <!-- Daftar Pengguna -->
     <div class="section-card">
       <div class="section-head">
         <h3>Daftar Pengguna</h3>
         <button id="btn-refresh" class="btn btn-ghost btn-sm">↻ Muat Ulang</button>
       </div>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Nama</th>
-            <th>Benar</th>
-            <th>Salah</th>
-            <th>Rata-rata</th>
-            <th>Sesi</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="users-body">
-          <tr><td colspan="7" class="table-empty">Memuat...</td></tr>
-        </tbody>
-      </table>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama</th>
+              <th>Benar</th>
+              <th>Salah</th>
+              <th>Rata-rata</th>
+              <th>⚡ Waktu Terbaik</th>
+              <th>Sesi</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="users-body">
+            <tr><td colspan="8" class="table-empty">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Riwayat Sesi -->
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Riwayat Sesi</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="session-filter" placeholder="Filter nama..." class="filter-input">
+          <button id="btn-refresh-sessions" class="btn btn-ghost btn-sm">↻ Muat Ulang</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Pengguna</th>
+              <th>Mode</th>
+              <th>Hasil</th>
+              <th>Skor</th>
+              <th>Durasi</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-body">
+            <tr><td colspan="6" class="table-empty">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Danger Zone -->
     <div class="danger-zone">
       <h3>⚠️ Zona Bahaya</h3>
       <p>Tindakan di bawah ini tidak dapat dibatalkan. Pastikan kamu tahu apa yang kamu lakukan.</p>
-      <button id="btn-clear-all" class="btn btn-danger">🗑 Hapus Semua Data Pengguna</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="btn-clear-all" class="btn btn-danger">🗑 Hapus Semua Pengguna</button>
+        <button id="btn-clear-sessions" class="btn btn-danger">🗑 Hapus Semua Riwayat Sesi</button>
+      </div>
     </div>
   </div>
 
@@ -104,14 +138,13 @@
 
     // ─── Auth ─────────────────────────────────────────────────────────────────
 
-    function isLoggedIn() {
-      return sessionStorage.getItem('admin_auth') === '1';
-    }
+    function isLoggedIn() { return sessionStorage.getItem('admin_auth') === '1'; }
 
     function showPanel() {
       document.getElementById('login-wrap').style.display = 'none';
       document.getElementById('admin-panel').classList.add('visible');
       loadUsers();
+      loadSessions();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -140,16 +173,22 @@
       });
 
       document.getElementById('btn-refresh').addEventListener('click', loadUsers);
+      document.getElementById('btn-refresh-sessions').addEventListener('click', loadSessions);
+
+      document.getElementById('session-filter').addEventListener('input', e => {
+        const q = e.target.value.trim().toLowerCase();
+        renderSessions(q ? allSessions.filter(s => s.username.toLowerCase().includes(q)) : allSessions);
+      });
 
       document.getElementById('btn-clear-all').addEventListener('click', () => {
         openModal(
-          'Hapus Semua Data?',
-          'Seluruh data pengguna dan skor akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+          'Hapus Semua Pengguna?',
+          'Seluruh data pengguna dan skor (kedua mode) akan dihapus permanen.',
           async () => {
             try {
               const res = await fetch('/admin/api/users', { method: 'DELETE', headers: ADMIN_HEADER });
               if (!res.ok) throw new Error();
-              toast('Semua data berhasil dihapus.', 'success');
+              toast('Semua data pengguna berhasil dihapus.', 'success');
               loadUsers();
             } catch {
               toast('Gagal menghapus data.', 'error');
@@ -158,21 +197,47 @@
         );
       });
 
+      document.getElementById('btn-clear-sessions').addEventListener('click', () => {
+        openModal(
+          'Hapus Semua Riwayat Sesi?',
+          'Seluruh catatan sesi akan dihapus permanen. Data pengguna tetap ada.',
+          async () => {
+            try {
+              const res = await fetch('/admin/api/sessions', { method: 'DELETE', headers: ADMIN_HEADER });
+              if (!res.ok) throw new Error();
+              toast('Riwayat sesi berhasil dihapus.', 'success');
+              loadSessions();
+            } catch {
+              toast('Gagal menghapus riwayat sesi.', 'error');
+            }
+          }
+        );
+      });
+
       document.getElementById('modal-cancel').addEventListener('click', closeModal);
+
+      document.getElementById('modal-confirm').addEventListener('click', () => {
+        const cb = _confirmCallback; // capture before closeModal nulls it
+        closeModal();
+        if (cb) cb();
+      });
+
+      document.getElementById('modal-overlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+      });
     });
 
-    // ─── Load users ───────────────────────────────────────────────────────────
+    // ─── Users ────────────────────────────────────────────────────────────────
 
     async function loadUsers() {
       const tbody = document.getElementById('users-body');
-      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Memuat...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Memuat...</td></tr>';
 
       try {
         const res  = await fetch('/admin/api/users', { headers: ADMIN_HEADER });
         if (res.status === 403) { toast('Akses ditolak.', 'error'); return; }
         const data = await res.json();
 
-        // Stats
         const totalSessions = data.reduce((s, u) => s + u.sessions, 0);
         const totalCorrect  = data.reduce((s, u) => s + u.totalCorrect, 0);
         const totalAnswers  = data.reduce((s, u) => s + u.totalCorrect + u.totalWrong, 0);
@@ -183,13 +248,14 @@
         document.getElementById('stat-avg').textContent      = globalAvg + '%';
 
         if (!data.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Belum ada pengguna terdaftar.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Belum ada pengguna terdaftar.</td></tr>';
           return;
         }
 
         tbody.innerHTML = data.map((u, i) => {
           const total = u.totalCorrect + u.totalWrong;
           const avg   = total > 0 ? Math.round((u.totalCorrect / total) * 100) : 0;
+          const best  = u.bestTime != null ? fmtDuration(u.bestTime) : '—';
           return `
             <tr>
               <td>${i + 1}</td>
@@ -197,18 +263,61 @@
               <td class="correct-cell">${u.totalCorrect}</td>
               <td class="wrong-cell">${u.totalWrong}</td>
               <td>${avg}%</td>
+              <td style="color:var(--primary);font-weight:700;">${best}</td>
               <td>${u.sessions}</td>
               <td>
                 <div class="action-btns">
-                  <button class="btn btn-warn btn-sm" onclick="resetUser('${u.username}')">Reset</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Hapus</button>
+                  <button class="btn btn-warn btn-sm" onclick="resetUser('${escAttr(u.username)}')">Reset</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteUser('${escAttr(u.username)}')">Hapus</button>
                 </div>
               </td>
             </tr>`;
         }).join('');
       } catch {
-        tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Gagal memuat data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Gagal memuat data.</td></tr>';
       }
+    }
+
+    // ─── Sessions ─────────────────────────────────────────────────────────────
+
+    let allSessions = [];
+
+    async function loadSessions() {
+      const tbody = document.getElementById('sessions-body');
+      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Memuat...</td></tr>';
+      try {
+        const res = await fetch('/admin/api/sessions', { headers: ADMIN_HEADER });
+        if (res.status === 403) { toast('Akses ditolak.', 'error'); return; }
+        allSessions = await res.json();
+        const q = document.getElementById('session-filter').value.trim().toLowerCase();
+        renderSessions(q ? allSessions.filter(s => s.username.toLowerCase().includes(q)) : allSessions);
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Gagal memuat data.</td></tr>';
+      }
+    }
+
+    function renderSessions(sessions) {
+      const tbody = document.getElementById('sessions-body');
+      if (!sessions.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Belum ada sesi tercatat.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = sessions.map(s => {
+        const dt     = new Date(s.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+        const mode   = s.mode === 1 ? 'Latihan 1' : 'Cari Sudut';
+        const result = s.mode === 1
+          ? `<span class="correct-cell">${s.correct}✓</span> <span class="wrong-cell">${s.wrong}✗</span>`
+          : `${s.earned}/${s.possible} poin`;
+        const dur    = s.duration != null ? fmtDuration(s.duration) : '—';
+        return `<tr>
+          <td style="white-space:nowrap;color:var(--text-muted);font-size:12px;">${dt}</td>
+          <td><strong>${s.username}</strong></td>
+          <td>${mode}</td>
+          <td>${result}</td>
+          <td>${s.score}%</td>
+          <td style="font-variant-numeric:tabular-nums;">${dur}</td>
+        </tr>`;
+      }).join('');
     }
 
     // ─── Actions ─────────────────────────────────────────────────────────────
@@ -216,12 +325,11 @@
     function resetUser(username) {
       openModal(
         `Reset "${username}"?`,
-        'Semua skor dan statistik pengguna ini akan direset ke nol. Akun tetap ada.',
+        'Semua skor, statistik, dan waktu terbaik pengguna ini akan direset ke nol. Akun tetap ada.',
         async () => {
           try {
             const res = await fetch(`/admin/api/users/${encodeURIComponent(username)}/reset`, {
-              method: 'PUT',
-              headers: ADMIN_HEADER,
+              method: 'PUT', headers: ADMIN_HEADER,
             });
             if (!res.ok) throw new Error();
             toast(`Skor ${username} berhasil direset.`, 'success');
@@ -240,8 +348,7 @@
         async () => {
           try {
             const res = await fetch(`/admin/api/users/${encodeURIComponent(username)}`, {
-              method: 'DELETE',
-              headers: ADMIN_HEADER,
+              method: 'DELETE', headers: ADMIN_HEADER,
             });
             if (!res.ok) throw new Error();
             toast(`${username} berhasil dihapus.`, 'success');
@@ -251,6 +358,17 @@
           }
         }
       );
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    function fmtDuration(seconds) {
+      if (seconds < 60) return `${seconds}s`;
+      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    }
+
+    function escAttr(str) {
+      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
     // ─── Modal ────────────────────────────────────────────────────────────────
@@ -268,15 +386,6 @@
       document.getElementById('modal-overlay').classList.remove('open');
       _confirmCallback = null;
     }
-
-    document.getElementById('modal-confirm').addEventListener('click', () => {
-      closeModal();
-      if (_confirmCallback) _confirmCallback();
-    });
-
-    document.getElementById('modal-overlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) closeModal();
-    });
 
     // ─── Toast ────────────────────────────────────────────────────────────────
 
