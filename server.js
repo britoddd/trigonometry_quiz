@@ -123,6 +123,36 @@ app.post('/api/score2', (req, res) => {
   res.json(data[username]);
 });
 
+// POST /api/session — log casual session (no leaderboard update)
+app.post('/api/session', (req, res) => {
+  const { username, mode, correct, wrong, earned, possible, duration } = req.body;
+  if (!username || typeof mode !== 'number') {
+    return res.status(400).json({ error: 'Data tidak valid' });
+  }
+
+  let score = 0;
+  if (mode === 3) {
+    const total = (correct || 0) + (wrong || 0);
+    score = total > 0 ? Math.round(((correct || 0) / total) * 100) : 0;
+  } else if (mode === 4) {
+    score = (possible || 0) > 0 ? Math.round(((earned || 0) / (possible || 0)) * 100) : 0;
+  }
+
+  addSession({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    username, mode,
+    timestamp: new Date().toISOString(),
+    correct: correct ?? null,
+    wrong:   wrong   ?? null,
+    earned:  earned  ?? null,
+    possible: possible ?? null,
+    score,
+    duration: typeof duration === 'number' ? duration : null,
+  });
+
+  res.json({ ok: true });
+});
+
 app.get('/api/leaderboard/fastest', (req, res) => {
   const data   = readData();
   const sorted = Object.values(data)

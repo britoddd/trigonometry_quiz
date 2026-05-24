@@ -50,10 +50,11 @@ function generateQuestions() {
 // ─── Session ─────────────────────────────────────────────────────────────────
 
 function startSession() {
-  sessionMode  = 'casual';
-  questions    = generateQuestions();
-  currentIndex = 0;
-  results      = [];
+  sessionMode      = 'casual';
+  sessionStartTime = Date.now();
+  questions        = generateQuestions();
+  currentIndex     = 0;
+  results          = [];
   showQuestion(0);
 }
 
@@ -205,9 +206,16 @@ function nextQuestion() {
 // ─── Summary (casual only) ────────────────────────────────────────────────────
 
 function finishSession() {
-  const correct = results.filter(r => r.isCorrect).length;
-  const wrong   = results.length - correct;
-  const pct     = Math.round((correct / results.length) * 100);
+  const correct  = results.filter(r => r.isCorrect).length;
+  const wrong    = results.length - correct;
+  const pct      = Math.round((correct / results.length) * 100);
+  const duration = Math.round((Date.now() - sessionStartTime) / 1000);
+
+  fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUser, mode: 3, correct, wrong, duration }),
+  }).catch(() => {});
 
   showScreen('screen-summary');
 

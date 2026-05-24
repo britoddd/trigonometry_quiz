@@ -304,8 +304,9 @@
       }
       tbody.innerHTML = sessions.map(s => {
         const dt     = new Date(s.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
-        const mode   = s.mode === 1 ? 'Latihan 1' : 'Cari Sudut';
-        const result = s.mode === 1
+        const modeLabel = { 1: 'Kompetitif - Nilai', 2: 'Kompetitif - Sudut', 3: 'Santai - Nilai', 4: 'Santai - Sudut' };
+        const mode   = modeLabel[s.mode] || `Mode ${s.mode}`;
+        const result = (s.mode === 1 || s.mode === 3)
           ? `<span class="correct-cell">${s.correct}✓</span> <span class="wrong-cell">${s.wrong}✗</span>`
           : `${s.earned}/${s.possible} poin`;
         const dur    = s.duration != null ? fmtDuration(s.duration) : '—';

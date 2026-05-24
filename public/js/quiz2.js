@@ -48,6 +48,7 @@ function generateReverseQuestions() {
 
 function startReverseSession() {
   sessionMode      = 'casual';
+  sessionStartTime = Date.now();
   reverseQuestions = generateReverseQuestions();
   reverseIndex     = 0;
   reverseResults   = [];
@@ -241,7 +242,14 @@ function nextReverseQuestion() {
 function finishReverseSession() {
   const totalEarned   = reverseResults.reduce((s, r) => s + r.earned,   0);
   const totalPossible = reverseResults.reduce((s, r) => s + r.possible, 0);
-  const pct = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+  const pct      = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+  const duration = Math.round((Date.now() - sessionStartTime) / 1000);
+
+  fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUser, mode: 4, earned: totalEarned, possible: totalPossible, duration }),
+  }).catch(() => {});
 
   showScreen('screen-summary-reverse');
 
