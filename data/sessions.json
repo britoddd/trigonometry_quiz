@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "mpjgq3e4gex",
+    "username": "test",
+    "mode": 3,
+    "timestamp": "2026-05-24T07:35:17.164Z",
+    "correct": 8,
+    "wrong": 2,
+    "earned": null,
+    "possible": null,
+    "score": 80,
+    "duration": 120
+  }
+]
